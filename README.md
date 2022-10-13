@@ -7,8 +7,7 @@ In this work we propose PromptBoosting, a query-efficient procedure for building
 
 0. Prompt pool construction (using the method from [LM-BFF](https://arxiv.org/pdf/2012.15723.pdf))
 1. Weak learner construction through verbalizer learning
-2. 
-Model ensemble using AdaBoost algorithm
+2. Model ensemble using AdaBoost algorithm
 
 
 
@@ -19,7 +18,7 @@ The dependency packages can be found in `requirements.txt` file.
 Similar to our baselines (DART, BBT, RLPrompt), we use the same few-shot split data from [LM-BFF](https://arxiv.org/pdf/2012.15723.pdf). One can directly download the data from the official github repository of LM-BFF([here](https://github.com/princeton-nlp/LM-BFF)).
 Or you can directly download it from [hear](https://drive.google.com/file/d/1GKzx-NqWovGB8V2KO3Qmw0yufqTgf0X1/view?usp=sharing) and unzip it. The directory should looks like:
 ```
-prompt_boosting
+prompt_boosting/
     datasets/
         ag_news/
         MNLI/
