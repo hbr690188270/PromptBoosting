@@ -17,6 +17,19 @@ The dependency packages can be found in `requirements.txt` file.
 
 ## Prepare the Data
 Similar to our baselines (DART, BBT, RLPrompt), we use the same few-shot split data from [LM-BFF](https://arxiv.org/pdf/2012.15723.pdf). One can directly download the data from the official github repository of LM-BFF([here](https://github.com/princeton-nlp/LM-BFF)).
+Or you can directly download it from [hear](https://drive.google.com/file/d/1GKzx-NqWovGB8V2KO3Qmw0yufqTgf0X1/view?usp=sharing) and unzip it. The directory should looks like:
+```
+prompt_boosting
+    datasets/
+        ag_news/
+        MNLI/
+        mr/
+        ...
+    scripts/
+    src/
+    templates/
+```
+
 #### 1. Generating few-shot splits
 To generate the few-shot data, use the following command:
 ```{sh}
@@ -111,4 +124,15 @@ This scripts will generate prompts based on the few-shot training data (`--seed`
 
 For GPUs without large enough memory (*i.e.*, V100 with 16GB memory, one may change the t5 model to `t5-large`). We use this model to generate prompts for AG's News dataset. Since the LM-BFF repository provides generated prompts for the other datasets, we directly use their generations and did not rerun the code for the generation.
 
+
+
+Some of our implementation comes from LM-BFF:
+```bibtex
+@inproceedings{gao2021making,
+   title={Making Pre-trained Language Models Better Few-shot Learners},
+   author={Gao, Tianyu and Fisch, Adam and Chen, Danqi},
+   booktitle={Association for Computational Linguistics (ACL)},
+   year={2021}
+}
+```
 
