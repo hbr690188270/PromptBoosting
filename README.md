@@ -2,7 +2,7 @@
 This is the official implementation of the paper *PromptBoosting: Black-Box Text Classification with Ten Forward Passes*.
 
 ## Overview
-![](./overview.pdf)
+![](./overview.png)
 In this work we propose PromptBoosting, a query-efficient procedure for building a text classifier from a neural language model (LM) without access to the LM’s parameters, gradients, or hidden representations. The pipeline includes:
 
 0. Prompt pool construction (using the method from [LM-BFF](https://arxiv.org/pdf/2012.15723.pdf))
@@ -16,7 +16,7 @@ The dependency packages can be found in `requirements.txt` file.
 
 ## Prepare the Data
 Similar to our baselines (DART, BBT, RLPrompt), we use the same few-shot split data from [LM-BFF](https://arxiv.org/pdf/2012.15723.pdf). One can directly download the data from the official github repository of LM-BFF([here](https://github.com/princeton-nlp/LM-BFF)).
-Or you can directly download it from [hear](https://drive.google.com/file/d/1GKzx-NqWovGB8V2KO3Qmw0yufqTgf0X1/view?usp=sharing) and unzip it. The directory should looks like:
+Or you can directly download it from [here](https://drive.google.com/file/d/1GKzx-NqWovGB8V2KO3Qmw0yufqTgf0X1/view?usp=sharing) and unzip it. The directory should looks like:
 ```
 prompt_boosting/
     datasets/
