@@ -69,8 +69,7 @@ if __name__ == '__main__':
 
 
     train_dataset, valid_dataset, test_dataset = load_dataset(dataset_name = dataset, sort_dataset = sort_dataset, fewshot = fewshot, k = fewshot_k, rand_seed = fewshot_seed,
-                                                            use_valid_for_train = True)
-    # label_token_set_path = ROOT_DIR + 'label_maps/sst_roberta_template1.json'
+                                                            use_valid_for_train = False)
 
     num_training = len(train_dataset[0])
     num_valid = len(valid_dataset[0])
@@ -85,10 +84,7 @@ if __name__ == '__main__':
                                             device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
 
     if args.template_dir == '':
-        if filter_templates:
-            template_dir_list = get_template_list(dataset, True, model = model, filter_num = 10)
-        else:
-            template_dir_list = get_template_list(dataset, False, model = model)
+        template_dir_list = get_template_list(dataset, model = model)
     else:
         template_dir_list = [ROOT_DIR + args.template_dir]
     template_manager = TemplateManager(template_dir_list = template_dir_list, output_token = vtuning_model.tokenizer.mask_token,
@@ -107,16 +103,16 @@ if __name__ == '__main__':
     best_test = 0
     best_template = None
     best_verbalizer = None
+
+    train_probs, valid_probs = None, None
     for model_id in tqdm.tqdm(range(args.max_template_num)):
         del train_probs
         del valid_probs
-        del test_probs
         template = template_manager.change_template()
         template.visualize()
     
         train_probs = trainer.pre_compute_logits(vtuning_model, template, train_dataset,)
         valid_probs = trainer.pre_compute_logits(vtuning_model, template, valid_dataset,)
-        test_probs = trainer.pre_compute_logits(vtuning_model, template, test_dataset,)
 
         trainer.record_dataset_weights(weight_tensor)
 
@@ -144,6 +140,7 @@ if __name__ == '__main__':
         if use_wandb:
             wandb.log(tolog)
 
-    test_acc, test_preds, test_logits, = trainer.evaluate(vtuning_model, test_probs, verbalizer, test_labels)
+    test_probs = trainer.pre_compute_logits(vtuning_model, best_template, test_dataset,)
+    test_acc, test_preds, test_logits, = trainer.evaluate(word2idx, test_probs, best_verbalizer, test_labels)
     best_template.visualize()
     print(f"best test acc {test_acc}")

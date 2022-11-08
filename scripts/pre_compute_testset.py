@@ -10,11 +10,11 @@ import tqdm
 import time
 
 from src.multicls_trainer import PromptBoostingTrainer
-from src.ptuning import BERTVTuningClassification, OPTVTuningClassification, RoBERTaVTuningClassification
+from src.ptuning import RoBERTaVTuningClassification
 from src.saver import TestPredictionSaver
 from src.template import TemplateManager
 from src.utils import ROOT_DIR, MODEL_CACHE_DIR, BATCH_SIZE, create_logger
-from src.data_util import get_class_num, get_test_segment, load_dataset, get_task_type, get_template_list
+from src.data_util import get_class_num, load_dataset, get_task_type, get_template_list
 
 import argparse
 
@@ -42,7 +42,6 @@ if __name__ == '__main__':
     dataset = args.dataset
     sentence_pair = get_task_type(dataset)
     num_classes = get_class_num(dataset)
-    num_test_segment = get_test_segment(dataset)
     model = args.model
 
     pred_cache_dir = args.pred_cache_dir
@@ -59,13 +58,10 @@ if __name__ == '__main__':
 
 
     if model == 'roberta':
-        vtuning_model = RoBERTaVTuningClassification(model_type = 'roberta-large', cache_dir = MODEL_CACHE_DIR + 'roberta_model/roberta-large/',
-                                                device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
-    elif model == 'bert':
-        vtuning_model = BERTVTuningClassification(model_type = 'bert-large-uncased', cache_dir = MODEL_CACHE_DIR + 'bert_model/bert-large-uncased/',
+        vtuning_model = RoBERTaVTuningClassification(model_type = 'roberta-large', cache_dir = os.path.join(MODEL_CACHE_DIR, 'roberta_model/roberta-large/'),
                                                 device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
     elif model == 'opt1.3b':
-        vtuning_model = OPTVTuningClassification(model_type = 'facebook/opt-1.3b', cache_dir = MODEL_CACHE_DIR + 'opt_model/opt-1.3b/',
+        vtuning_model = OPTVTuningClassification(model_type = 'facebook/opt-1.3b', cache_dir = os.path.join(MODEL_CACHE_DIR, 'opt_model/opt-1.3b/'),
                                                 device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
 
     if filter_templates:
@@ -80,8 +76,8 @@ if __name__ == '__main__':
 
     trainer = PromptBoostingTrainer(adaboost_lr = 1.0, num_classes = num_classes, adaboost_maximum_epoch = 100)
 
-    save_dir = ROOT_DIR + f'/cached_test_preds/{dataset}/'
-    prediction_saver = TestPredictionSaver(save_dir = ROOT_DIR + f'/cached_test_preds/{dataset}/', model_name = model, num_segment = num_test_segment)
+    save_dir = os.path.join(ROOT_DIR, f'cached_test_preds/{dataset}/')
+    prediction_saver = TestPredictionSaver(save_dir = os.path.join(ROOT_DIR, f'cached_test_preds/{dataset}/'), model_name = model)
     
     word2idx = vtuning_model.tokenizer.get_vocab()
     all_templates = template_manager.get_all_template()

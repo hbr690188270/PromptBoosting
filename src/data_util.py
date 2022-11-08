@@ -285,11 +285,6 @@ def get_class_num(dataset_name):
     elif dataset_name in ['trec']:
         return 6
 
-def get_test_segment(dataset_name):
-    if dataset_name == 'imdb':
-        return 5
-    else:
-        return 1
 
 def get_batch_size(model_name):
     if 'deberta' in model_name:
@@ -318,8 +313,6 @@ def get_template_list(dataset, model = 'roberta'):
     if model in ['roberta']:
         if dataset == 'sst':
             template_dir_list = [ROOT_DIR + 'templates/t5_sorted_sst/']
-        elif dataset == 'sst5':
-            template_dir_list = [ROOT_DIR + 'templates/t5_sorted_sst5/']
         elif dataset == 'rte':
             template_dir_list = [ROOT_DIR + 'templates/t5_sorted_rte/']
         elif dataset == 'mnli':
@@ -328,8 +321,6 @@ def get_template_list(dataset, model = 'roberta'):
             template_dir_list = [ROOT_DIR + 'templates/t5_sorted_qnli/']
         elif dataset == 'snli':
             template_dir_list = [ROOT_DIR + 'templates/t5_sorted_snli/']
-        elif dataset == 'imdb':
-            template_dir_list = [ROOT_DIR + 'templates/t5_sorted_imdb/']
         elif dataset == 'trec':
             template_dir_list = [ROOT_DIR + 'templates/t5_sorted_trec/']
         elif dataset == 'agnews':

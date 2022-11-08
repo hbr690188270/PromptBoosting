@@ -165,9 +165,9 @@ class PromptBoostingTrainer(BaseMuticlsTrainer):
 
     def train(self, dataset: List, vtuning_model: RoBERTaVTuningClassification,
                     train_probs: torch.LongTensor, train_labels: torch.LongTensor, 
-                    weight_tensor: torch.FloatTensor, label_set_size: int, size_penalty = False, norm_class = False):
+                    weight_tensor: torch.FloatTensor, label_set_size: int, norm_class = False):
         label_map, token_scores = generate_multicls_l1_label_set_with_cache(dataset, vtuning_model, weight_list = weight_tensor.tolist(), cache_probs = train_probs, label_set_size = 0, 
-                                size_penalty = size_penalty, num_classes = self.num_classes, norm_class = norm_class)
+                                num_classes = self.num_classes, norm_class = norm_class)
         for i in range(self.num_classes):
             class_mask = label_map == i
             token_scores[i,~class_mask] = -10000

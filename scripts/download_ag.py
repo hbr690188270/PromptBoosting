@@ -6,7 +6,7 @@ from src.utils import ROOT_DIR
 import datasets
 import pandas as pd
 
-ag_dataset = datasets.load_dataset("ag_news", cache_dir = '/mnt/cloud/bairu/dataset_cache/ag_news/')
+ag_dataset = datasets.load_dataset("ag_news", cache_dir = ROOT_DIR + 'dataset_cache/ag_news/')
 train_dataset = ag_dataset['train']
 test_dataset = ag_dataset['test']
 

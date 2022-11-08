@@ -7,7 +7,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 from src.utils import ROOT_DIR
-dataset_transform = {'sst':'SST-2','rte':'RTE','snli':'SNLI','mnli':'MNLI','qnli': 'QNLI', 'trec':'trec','imdb':'imdb','sst-5':'SST-5'}
+dataset_transform = {'sst':'SST-2','rte':'RTE','snli':'SNLI','mnli':'MNLI','qnli': 'QNLI', 'trec':'trec'}
 
 def split_lines(lines, valid_ratio = 0.1):
     total_num = len(lines)

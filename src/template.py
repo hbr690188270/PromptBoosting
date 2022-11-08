@@ -318,12 +318,24 @@ class TemplateManager():
         if self.rand_order:
             random.shuffle(self.random_indices)
         self.curr_index = 0
+    
+    def infer_template_file_name(self, filenames: List[str]):
+        '''
+        infer the template names. The template names are xxx1.json, xxx2.json, ..., xxx100.json for example. 
+        os.listdir() might not return them in the order of "1.json, 2.json ...". Instead, it will return "1.json, 10.json, 100.json"
+        Therefore, we infer the name "xxx" in "xxx_1.json" and construct the template name manually.
+        '''
+        first_template_name = filenames[0]  ## first item will always be xxx1.json
+        basename = first_template_name[:-6]
+        return basename
 
     def load_templates(self,) -> List[SentenceTemplate]:
         template_list = []
         for template_dir in self.template_dir_list:
             filenames = os.listdir(template_dir)
-            for filename in filenames:
+            base_filename = self.infer_template_file_name(filenames)
+            for idx in range(len(filenames)):
+                filename = f"{base_filename}{idx + 1}.json"
                 file_addr = os.path.join(template_dir, filename)
                 template = SentenceTemplate(template_path = file_addr, output_token = self.output_token)
                 template_list.append(template)

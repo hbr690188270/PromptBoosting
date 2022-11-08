@@ -1,4 +1,6 @@
-"""This script samples K examples randomly without replacement from the original data."""
+"""This script samples K examples randomly without replacement from the original data.
+This script is from the repository https://github.com/princeton-nlp/LM-BFF with a few modifications
+"""
 
 import argparse
 import os
@@ -91,7 +93,7 @@ def main():
     parser.add_argument("--k", type=int, default=16,
         help="Training examples for each class.")
     parser.add_argument("--task", type=str, nargs="+", 
-        default=['SST-2', 'sst-5', 'mr', 'cr', 'mpqa', 'subj', 'trec', 'CoLA', 'MRPC', 'QQP', 'STS-B', 'MNLI', 'SNLI', 'QNLI', 'RTE'],
+        default=['SST-2', 'mr', 'trec', 'MNLI', 'SNLI', 'QNLI', 'RTE', 'ag_news'],
         help="Task names")
     parser.add_argument("--seed", type=int, nargs="+", 
         default=[100, 13, 21, 42, 87],

@@ -5,11 +5,11 @@ import tqdm
 import time
 
 from src.multicls_trainer import PromptBoostingTrainer
-from src.ptuning import BERTVTuningClassification, BaseModel, OPTVTuningClassification, RoBERTaVTuningClassification
-from src.saver import PredictionSaver, PredictionSaver2, TestPredictionSaver
+from src.ptuning import BaseModel, OPTVTuningClassification, RoBERTaVTuningClassification
+from src.saver import PredictionSaver, TestPredictionSaver
 from src.template import SentenceTemplate, TemplateManager
 from src.utils import ROOT_DIR, BATCH_SIZE, create_logger, MODEL_CACHE_DIR
-from src.data_util import get_class_num, get_test_segment, get_weak_cls_num, load_dataset, get_task_type, get_template_list
+from src.data_util import get_class_num, get_weak_cls_num, load_dataset, get_task_type, get_template_list
 
 import wandb
 import argparse
@@ -48,7 +48,6 @@ if __name__ == '__main__':
     dataset = args.dataset
     sentence_pair = get_task_type(dataset)
     num_classes = get_class_num(dataset)
-    num_test_segment = get_test_segment(dataset)
     adaboost_weak_cls = get_weak_cls_num(dataset)
     model = args.model
 
@@ -97,9 +96,6 @@ if __name__ == '__main__':
     if model == 'roberta':
         vtuning_model = RoBERTaVTuningClassification(model_type = 'roberta-large', cache_dir = MODEL_CACHE_DIR + 'roberta_model/roberta-large/',
                                                 device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
-    elif model == 'bert':
-        vtuning_model = BERTVTuningClassification(model_type = 'bert-large-uncased', cache_dir = MODEL_CACHE_DIR + 'bert_model/bert-large-uncased/',
-                                                device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
     elif model == 'opt1.3b':
         vtuning_model = OPTVTuningClassification(model_type = 'facebook/opt-1.3b', cache_dir = MODEL_CACHE_DIR + 'opt_model/opt-1.3b/',
                                                 device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
@@ -114,14 +110,14 @@ if __name__ == '__main__':
     trainer = PromptBoostingTrainer(adaboost_lr = adaboost_lr, num_classes = num_classes, adaboost_maximum_epoch = adaboost_maximum_epoch)
 
     if pred_cache_dir != '':
-        prediction_saver = PredictionSaver2(save_dir = ROOT_DIR + pred_cache_dir + '/novalid/', model_name = model,
+        prediction_saver = PredictionSaver(save_dir = ROOT_DIR + pred_cache_dir + '/novalid/', model_name = model,
                                             fewshot = fewshot, fewshot_k = fewshot_k, fewshot_seed = fewshot_seed,
                                             )
     else:
-        prediction_saver = PredictionSaver2(model_name = model,
+        prediction_saver = PredictionSaver(model_name = model,
                                             fewshot = fewshot, fewshot_k = fewshot_k, fewshot_seed = fewshot_seed,        
                                             )
-    test_pred_saver = TestPredictionSaver(save_dir = ROOT_DIR + f'/cached_test_preds/{dataset}/', model_name = model, num_segment = num_test_segment)
+    test_pred_saver = TestPredictionSaver(save_dir = ROOT_DIR + f'/cached_test_preds/{dataset}/', model_name = model)
     train_probs, valid_probs = [],[]
 
     word2idx = vtuning_model.tokenizer.get_vocab()
@@ -192,7 +188,3 @@ if __name__ == '__main__':
 
     to_log = {"best_test":test_ensemble_acc}
     wandb.log(to_log)
-
-
-
-

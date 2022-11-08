@@ -32,7 +32,7 @@ prompt_boosting/
 #### 1. Generating few-shot splits
 To generate the few-shot data, use the following command:
 ```{sh}
-python scripts/generate_k_shot_data.py
+python scripts/generate_k_shot_data.py --data_dir datasets/original --output_dir datasets
 ```
 To generate the training data larger than 16-shot per class, use the following command:
 ```{sh}
@@ -68,7 +68,7 @@ python scripts/pre_compute_testset.py --dataset sst --model roberta --use_part_t
 ### 2. Main experiments
 To run the codes, use the following command:
 ```{sh}
-python ensemble_training.py --adaboost_weak_cls 200 --dataset sst --model roberta --label_set_size 50 --change_template --use_part_templates --start_idx 0 --end_idx 10 --sort_dataset --fewshot --fewshot_k 16 --fewshot_seed 100
+python ensemble_training.py --adaboost_weak_cls 200 --dataset trec --model roberta --label_set_size 5 --change_template --use_part_templates --start_idx 0 --end_idx 10 --sort_dataset --fewshot --fewshot_k 16 --fewshot_seed 100
 ```
 Explanations on the parameters:
 
@@ -95,7 +95,7 @@ Explanations on the parameters:
 **Note**: as we have discussed in the experiments (if running experiments using the above commands you can also find the phenomenon), we cannot use Adaboost to ensemble models on SST and MR datasets. Individual weak classifiers can achieve 100% accuracy because the training data is small and easy for the model to fit. Therefore, in 16-shot few-shot setting, we do not ensemble classifiers on SST and MR datasets. Instead, we directly learn weak learners on the unweighted training set and use the weak learner with the best validation performance as the final model (instead of the ensembled model). To run experiments on SST and MR datasets in the 16-shot setting, use the following command:
 
 ```{sh}
-python weakcls_training.py --dataset sst --model roberta --label_set_size 50 --change_template --max_template_num 10 --sort_dataset --fewshot --fewshot_k 16 --fewshot_seed 100
+python weakcls_training.py --dataset sst --model roberta --label_set_size 50  --max_template_num 10 --sort_dataset --fewshot --fewshot_k 16 --fewshot_seed 100
 ```
 `--max_template_num` controls the number of prompts we use (similar to `start_idx, end_idx` above. `max_template_num=10` means we use the top-10 prompts for training.)
 

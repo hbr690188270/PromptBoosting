@@ -209,9 +209,9 @@ if __name__ == '__main__':
     logger.info(f"best valid acc {valid_ensemble_acc}")
     logger.info(f"best test acc {test_ensemble_acc}")
 
-    to_log = {"best_valid": valid_ensemble_acc, "best_test":test_ensemble_acc}
-    wandb.log(to_log)
-
+    if use_wandb:
+        to_log = {"best_valid": valid_ensemble_acc, "best_test":test_ensemble_acc}
+        wandb.log(to_log)
 
 
 

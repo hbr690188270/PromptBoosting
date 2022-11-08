@@ -1,6 +1,9 @@
-ROOT_DIR = '/mnt/cloud/bairu/repos/vtuning/'
-MODEL_CACHE_DIR = '/mnt/cloud/bairu/model_cache/'
-FEWSHOT_PATH = ROOT_DIR + 'fewshot_id/'
+import os, sys, inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+ROOT_DIR = parentdir
+MODEL_CACHE_DIR = os.path.join(ROOT_DIR, 'model_cache/')
+FEWSHOT_PATH = os.path.join(ROOT_DIR, 'fewshot_id/')
 BATCH_SIZE = 12
 
 
