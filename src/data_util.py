@@ -8,7 +8,7 @@ import pandas as pd
 import os
 import shutil
 
-dataset_transform = {'sst':'SST-2','rte':'RTE','snli':'SNLI','mnli':'MNLI','qnli': 'QNLI', 'trec':'trec','imdb':'imdb','sst-5':'SST-5', 'agnews':'ag_news', 'mr':'mr'}
+dataset_transform = {'sst':'SST-2','rte':'RTE','snli':'SNLI','mnli':'MNLI','qnli': 'QNLI', 'trec':'trec','imdb':'imdb','sst-5':'SST-5', 'agnews':'agnews', 'mr':'mr', 'cr':'cr','mpqa':'mpqa','subj':'subj','cola':'CoLA','mnli-mm':'MNLI','mrpc':'MRPC','qqp':'QQP'}
 
 def load_dataset(dataset_name = 'sst', sort_dataset = False, fewshot = False, k = 0, rand_seed = 0, use_valid_for_train = False,
                 low_resource = False):

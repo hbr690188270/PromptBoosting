@@ -5,7 +5,7 @@ import tqdm
 import time
 
 from src.multicls_trainer import PromptBoostingTrainer
-from src.ptuning import BaseModel, RoBERTaVTuningClassification
+from src.ptuning import BaseModel, RoBERTaVTuningClassification, OPTVTuningClassification
 from src.saver import PredictionSaver, TestPredictionSaver
 from src.template import SentenceTemplate, TemplateManager
 from src.utils import ROOT_DIR, BATCH_SIZE, create_logger, MODEL_CACHE_DIR
@@ -104,14 +104,23 @@ if __name__ == '__main__':
 
     weight_tensor = torch.ones(num_training, dtype = torch.float32).to(device) / num_training
 
-    vtuning_model = RoBERTaVTuningClassification(model_type = 'roberta-large', cache_dir = MODEL_CACHE_DIR + 'roberta_model/roberta-large/',
-                                            device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
+    if model == 'roberta':
+        vtuning_model = RoBERTaVTuningClassification(model_type = 'roberta-large', cache_dir = MODEL_CACHE_DIR + 'roberta_model/roberta-large/',
+                                                device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
+    elif model == 'opt-13b':
+        vtuning_model = OPTVTuningClassification(model_type = 'facebook/opt-13b', cache_dir = MODEL_CACHE_DIR + 'opt_model/opt-1.3b/',
+                                                device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
+    elif model == 'opt-6.7b':
+        vtuning_model = OPTVTuningClassification(model_type = 'facebook/opt-6.7b', cache_dir = MODEL_CACHE_DIR + 'opt_model/opt-6.7b/',
+                                                device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
+    else:
+        raise NotImplementedError
 
     if filter_templates:
         template_dir_list = get_template_list_with_filter(dataset, fewshot = fewshot, low = low,  fewshot_seed = fewshot_seed, 
                                                           fewshot_k = fewshot_k,  topk = 10, return_source_dir = False)
     else:
-        template_dir_list = get_template_list(dataset)
+        template_dir_list = get_template_list(dataset, model = args.model)
     template_manager = TemplateManager(template_dir_list = template_dir_list, output_token = vtuning_model.tokenizer.mask_token, max_template_num = max_template_num,
                                         use_part_templates = args.use_part_templates, start_idx = args.start_idx, end_idx = args.end_idx)
 

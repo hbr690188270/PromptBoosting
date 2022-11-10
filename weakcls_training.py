@@ -6,7 +6,7 @@ import time
 import copy
 
 from src.multicls_trainer import PromptBoostingTrainer
-from src.ptuning import  RoBERTaVTuningClassification
+from src.ptuning import  RoBERTaVTuningClassification, OPTVTuningClassification
 from src.saver import PredictionSaver, TestPredictionSaver
 from src.template import SentenceTemplate, TemplateManager
 from src.utils import ROOT_DIR, create_logger, MODEL_CACHE_DIR
@@ -80,9 +80,18 @@ if __name__ == '__main__':
 
     weight_tensor = torch.ones(num_training, dtype = torch.float32).to(device) / num_training
 
-    vtuning_model = RoBERTaVTuningClassification(model_type = 'roberta-large', cache_dir = MODEL_CACHE_DIR + 'roberta_model/roberta-large/',
-                                            device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
+    if model == 'roberta':
+        vtuning_model = RoBERTaVTuningClassification(model_type = 'roberta-large', cache_dir = MODEL_CACHE_DIR + 'roberta_model/roberta-large/',
+                                                device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
+    elif model == 'opt-13b':
+        vtuning_model = OPTVTuningClassification(model_type = 'facebook/opt-13b', cache_dir = MODEL_CACHE_DIR + 'opt_model/opt-1.3b/',
+                                                device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
+    elif model == 'opt-6.7b':
+        vtuning_model = OPTVTuningClassification(model_type = 'facebook/opt-6.7b', cache_dir = MODEL_CACHE_DIR + 'opt_model/opt-6.7b/',
+                                                device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
 
+    else:
+        raise NotImplementedError
     if args.template_dir == '':
         template_dir_list = get_template_list(dataset, model = model)
     else:
@@ -105,7 +114,10 @@ if __name__ == '__main__':
     best_verbalizer = None
 
     train_probs, valid_probs = None, None
-    for model_id in tqdm.tqdm(range(args.max_template_num)):
+    all_templates = template_manager.get_all_template()
+    iter_num = np.min([len(all_templates), args.max_template_num])
+
+    for model_id in tqdm.tqdm(range(iter_num)):
         del train_probs
         del valid_probs
         template = template_manager.change_template()
@@ -139,8 +151,8 @@ if __name__ == '__main__':
         }
         if use_wandb:
             wandb.log(tolog)
-
-    test_probs = trainer.pre_compute_logits(vtuning_model, best_template, test_dataset,)
-    test_acc, test_preds, test_logits, = trainer.evaluate(word2idx, test_probs, best_verbalizer, test_labels)
+    
+    cls_scores = trainer.pre_compute_logits(vtuning_model, best_template, test_dataset)
+    test_acc, test_preds, test_logits, = trainer.evaluate(word2idx, cls_scores, best_verbalizer, test_labels)
     best_template.visualize()
     print(f"best test acc {test_acc}")

@@ -6,11 +6,11 @@ from src.utils import ROOT_DIR
 import datasets
 import pandas as pd
 
-ag_dataset = datasets.load_dataset("ag_news", cache_dir = ROOT_DIR + 'dataset_cache/ag_news/')
+ag_dataset = datasets.load_dataset("ag_news", cache_dir = ROOT_DIR + 'dataset_cache/agnews/')
 train_dataset = ag_dataset['train']
 test_dataset = ag_dataset['test']
 
-output_dir = ROOT_DIR + 'datasets/original/ag_news/'
+output_dir = ROOT_DIR + 'datasets/original/agnews/'
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
 pd_train = train_dataset.to_pandas()

@@ -54,7 +54,14 @@ class SentenceTemplate():
         print("template: ", ''.join(self.template_content))
         return ''.join(self.template_content)
 
-    def format_sp_input(self, text_a, text_b, prompt_after_texta, prompt_before_textb):
+    def format_sp_input(self, text_a, text_b, prompt_before_texta, prompt_after_texta, prompt_before_textb, prompt_after_textb):
+        if prompt_before_texta != None:
+            if prompt_before_texta[-1] in ['.','!','?','...']:
+                text_a = " " + text_a
+            else:
+                text_a = text_a[0].lower() + text_a[1:]
+                text_a = " " + text_a
+
         if prompt_after_texta[0] in string.punctuation:
             if text_a[-1] in string.punctuation:
                 if text_a[-2] == " ":
@@ -67,6 +74,15 @@ class SentenceTemplate():
         else:
             text_b = text_b[0].lower() + text_b[1:]
             text_b = " " + text_b
+        
+        if prompt_after_textb != None:
+            if prompt_after_textb[0] in string.punctuation:
+                if text_b[-1] in string.punctuation:
+                    if text_b[-2] == " ":
+                        text_b = text_b[:-2]    
+                    else:
+                        text_b = text_b[:-1]
+
         return text_a, text_b
 
     def format_input(self, text_a: str, prompt_after_texta):
@@ -110,7 +126,18 @@ class SentenceTemplate():
         output_list = copy.deepcopy(self.template_content)
 
         if self.sentence_pair:
-            text_a, text_b = self.format_sp_input(text_a, text_b, self.template_content[self.input_positions[0] + 1], self.template_content[self.input_positions[1] - 1])
+            if self.input_positions[0] >= 1:
+                prompt_before_texta = self.template_content[self.input_positions[0] - 1]
+            else:
+                prompt_before_texta = None
+            if self.input_positions[1] < len(self.template_content) - 1:
+                prompt_after_textb = self.template_content[self.input_positions[1] + 1]
+                if len(prompt_after_textb) == 0:
+                    prompt_after_textb = None
+            else:
+                prompt_after_textb = None
+
+            text_a, text_b = self.format_sp_input(text_a, text_b, prompt_before_texta, self.template_content[self.input_positions[0] + 1], self.template_content[self.input_positions[1] - 1], prompt_after_textb)
         else:
             if self.input_positions[0] < len(self.template_content) - 1:
                 text_a = self.format_input(text_a, self.template_content[self.input_positions[0] + 1])
@@ -119,7 +146,8 @@ class SentenceTemplate():
             if text_b == None:
                 raise NotImplementedError
             output_list[self.input_positions[1]] = text_b
-        output_list[self.output_position] = self.output_token
+        if self.output_position >= 0:    ## For CausalLM, there is no output token (we will take the output on the last token) and the output_position is -1
+            output_list[self.output_position] = self.output_token
         output_sequence = ''.join(output_list)
 
         if tokenizer is not None:
