@@ -60,7 +60,6 @@ if __name__ == '__main__':
     filter_templates = args.filter_templates
 
     suffix = "weakcls"
-    logger, log_dir = create_logger(logger_name='no_ensemble',filename = f'{model}-{dataset}-template{max_template_num}-{suffix}')
     wandb_name = f"{model}-{dataset}-template{max_template_num}-{suffix}"
 
     if use_wandb:
@@ -131,9 +130,6 @@ if __name__ == '__main__':
         print(verbalizer)
         print(f"\ttemplate {model_id + 1} finished")
         print(f"\ttrain error {train_error}, train_acc {train_acc}")
-
-        logger.info(f"\ttemplate {model_id + 1} finished")
-        logger.info(f"\ttrain error {train_error}, train_acc {train_acc}")
         succ_flag = True
                 
         valid_acc, valid_preds, valid_logits = trainer.evaluate(word2idx, valid_probs, verbalizer, valid_labels)

@@ -81,7 +81,6 @@ if __name__ == '__main__':
     if filter_templates:
         suffix += f"filtered"
 
-    logger, log_dir = create_logger(logger_name='ensemble',filename = f'{model}-{dataset}-{suffix}')
     wandb_name = f"{model}-{dataset}-{suffix}"
 
     if use_wandb:
@@ -162,18 +161,13 @@ if __name__ == '__main__':
         if train_error < 1 - (1 / (num_classes)):
             print(f"\tmodel {model_id + 1} finished")
             print(f"\ttrain error {train_error}, train_acc {train_acc}")
-
-            logger.info(f"\tmodel {model_id + 1} finished")
-            logger.info(f"\ttrain error {train_error}, train_acc {train_acc}")
             succ_flag = True
         else:
             print(f"error {train_error}; train_acc {train_acc}\n Ensemble is worse than random, ensemble can not be fit.")
-            logger.info(f"error {train_error}; train_acc {train_acc}\n Ensemble is worse than random, ensemble can not be fit.")
             continue
 
         alpha, weight_tensor = trainer.adaboost_step(train_error, wrong_flags, weight_tensor)
         print(f"\talpha {alpha}")
-        logger.info(f"\talpha {alpha}")
                 
         valid_acc, valid_preds, valid_logits = trainer.evaluate(word2idx, valid_probs, verbalizer, valid_labels)
 
@@ -203,8 +197,6 @@ if __name__ == '__main__':
 
     print(f"finish training with {len(trainer.model_weight_tensor)} weak classifier")
     print(f"best ensemble classfier: 0 - {trainer.best_epoch}")
-    logger.info(f"finish training with {len(trainer.model_weight_tensor)} weak classifier")
-    logger.info(f"best ensemble classfier: 0 - {trainer.best_epoch}")
     valid_ensemble_acc = trainer.ensemble_result(valid_labels, split = 'valid', ensemble_num = trainer.best_epoch)
     
     all_template_used = template_manager.get_all_template()
@@ -212,8 +204,6 @@ if __name__ == '__main__':
 
     print(f"best valid acc {valid_ensemble_acc}")
     print(f"best test acc {test_ensemble_acc}")
-    logger.info(f"best valid acc {valid_ensemble_acc}")
-    logger.info(f"best test acc {test_ensemble_acc}")
 
     if use_wandb:
         to_log = {"best_valid": valid_ensemble_acc, "best_test":test_ensemble_acc}
