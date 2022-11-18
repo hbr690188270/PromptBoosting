@@ -36,7 +36,7 @@ def get_label(task, line):
             raise NotImplementedError
     elif task == 'imdb':
         return line[-1]
-    elif task == 'ag_news':
+    elif task == 'agnews':
         return line[-1]
     else:
         return line[0]
@@ -58,7 +58,7 @@ def load_datasets(data_dir, tasks):
                     lines = f.readlines()
                 dataset[split] = lines
             datasets[task] = dataset
-        elif task == 'ag_news':
+        elif task == 'agnews':
             dataset = {}
             dirname = os.path.join(data_dir, task)
             splits = ["train", "test"]
@@ -93,7 +93,7 @@ def main():
     parser.add_argument("--k", type=int, default=16,
         help="Training examples for each class.")
     parser.add_argument("--task", type=str, nargs="+", 
-        default=['SST-2', 'mr', 'trec', 'MNLI', 'SNLI', 'QNLI', 'RTE', 'ag_news'],
+        default=['SST-2', 'mr', 'trec', 'MNLI', 'SNLI', 'QNLI', 'RTE', 'agnews'],
         help="Task names")
     parser.add_argument("--seed", type=int, nargs="+", 
         default=[100, 13, 21, 42, 87],

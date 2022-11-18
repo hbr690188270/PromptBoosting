@@ -12,7 +12,7 @@ class PredictionSaver():
     
     This saver only save train/validation prediction. For test set prediction, we use TestPredictionSaver.
     '''
-    def __init__(self, save_dir = ROOT_DIR + 'cached_preds/', model_name = 'roberta', use_logits = False, fewshot = False, low = False, fewshot_k = 0, fewshot_seed = 0):
+    def __init__(self, save_dir = os.path.join(ROOT_DIR,'cached_preds/'), model_name = 'roberta', use_logits = False, fewshot = False, low = False, fewshot_k = 0, fewshot_seed = 0):
         assert not (fewshot and low), "fewshot and low resource can not be true simutaneously!"
         self.save_dir = save_dir
         self.model_name = model_name
@@ -32,10 +32,10 @@ class PredictionSaver():
             template_name += f'_fs_{self.fewshot_k}shot_seed{self.fewshot_seed}'
         elif self.low:
             template_name += f'_low{self.fewshot_k}_seed{self.fewshot_seed}'
-        if os.path.exists(self.save_dir + f"{template_name}.pkl"):
+        if os.path.exists(os.path.join(self.save_dir, f"{template_name}.pkl")):
             print("already exists! Will not save it")
         else:
-            with open(self.save_dir + f"{template_name}.pkl", 'wb') as f:
+            with open(os.path.join(self.save_dir, f"{template_name}.pkl"), 'wb') as f:
                 pickle.dump((train_preds, valid_preds), f)
     
     def load_preds(self, template: SentenceTemplate):
@@ -46,16 +46,16 @@ class PredictionSaver():
             template_name += f'_fs_{self.fewshot_k}shot_seed{self.fewshot_seed}'
         elif self.low:
             template_name += f'_low{self.fewshot_k}_seed{self.fewshot_seed}'
-        if os.path.exists(self.save_dir + f"{template_name}.pkl"):
-            with open(self.save_dir + f"{template_name}.pkl", 'rb') as f:
+        if os.path.exists(os.path.join(self.save_dir, f"{template_name}.pkl")):
+            with open(os.path.join(self.save_dir, f"{template_name}.pkl"), 'rb') as f:
                 (train_preds, valid_preds) = pickle.load(f)            
             return (train_preds, valid_preds), True
         else:
-            print(f"did not find file ", self.save_dir + f"{template_name}.pkl")
+            print(f"did not find file ", os.path.join(self.save_dir, f"{template_name}.pkl"))
             return (), False
 
 class TestPredictionSaver():
-    def __init__(self, save_dir = ROOT_DIR + 'cached_preds/', model_name = 'roberta', use_logits = False, fewshot = False, fewshot_k = 0, fewshot_seed = 0):
+    def __init__(self, save_dir = os.path.join(ROOT_DIR, 'cached_preds/'), model_name = 'roberta', use_logits = False, fewshot = False, fewshot_k = 0, fewshot_seed = 0):
         self.save_dir = save_dir
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir, exist_ok = True)
@@ -74,7 +74,7 @@ class TestPredictionSaver():
         if self.use_logits:
             template_name += '_logits'
 
-        save_name = self.save_dir + f"{template_name}.pkl"
+        save_name = os.path.join(self.save_dir, f"{template_name}.pkl")
         with open(save_name, 'wb') as f:
             pickle.dump(test_preds, f)
         del test_preds
@@ -86,7 +86,7 @@ class TestPredictionSaver():
             template_name += f"_{self.model_name}"
         if self.use_logits:
             template_name += '_logits'
-        save_addr = self.save_dir + f"{template_name}.pkl"
+        save_addr = os.path.join(self.save_dir, f"{template_name}.pkl")
         if not os.path.exists(save_addr):
             return [], False
         with open(save_addr, 'rb') as f:

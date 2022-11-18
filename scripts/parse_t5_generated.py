@@ -54,9 +54,9 @@ def transform_raw(raw_template, idx,saver):
     json_list = []
     segment_id = 1
     for i, item in enumerate(items):
-        if 'sent_0' in item:
+        if 'sent_0' in item or 'sent-_0' in item:
             desc_dict = {"meta": "text_a"}
-        elif 'sent_1' in item:
+        elif 'sent_1' in item or '+sentl_1' in item:
             desc_dict = {"meta": "text_b"}
         elif item == 'mask':
             if lm_type == 'mlm':

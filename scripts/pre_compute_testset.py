@@ -57,13 +57,8 @@ if __name__ == '__main__':
     test_labels = torch.LongTensor(test_dataset[1]).to(device)
 
 
-    if model == 'roberta':
-        vtuning_model = RoBERTaVTuningClassification(model_type = 'roberta-large', cache_dir = os.path.join(MODEL_CACHE_DIR, 'roberta_model/roberta-large/'),
-                                                device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
-    elif model == 'opt1.3b':
-        vtuning_model = OPTVTuningClassification(model_type = 'facebook/opt-1.3b', cache_dir = os.path.join(MODEL_CACHE_DIR, 'opt_model/opt-1.3b/'),
-                                                device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
-
+    vtuning_model = RoBERTaVTuningClassification(model_type = 'roberta-large', cache_dir = os.path.join(MODEL_CACHE_DIR, 'roberta_model/roberta-large/'),
+                                            device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
     if filter_templates:
         template_dir_list = get_template_list(dataset, True, model = model, filter_num = 10)
     else:

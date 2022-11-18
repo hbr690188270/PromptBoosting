@@ -10,14 +10,16 @@ import random
 import string
 
 class SentenceTemplate():
-    def __init__(self, template_path = ROOT_DIR + 'templates/sst/template1.json', no_init = False,
-                    output_token = '[MASK]'):
+    def __init__(self, template_path, template_json_string = None,
+                    output_token = '[MASK]', read_from_raw_file = True):
         self.template_name = ''
-        if no_init:
-            return
-        else:
+        self.read_from_raw_file = read_from_raw_file
+        if self.read_from_raw_file:
             self.template_path = template_path
             self.template_content, self.input_positions, self.output_position = self.parse_template_file(self.template_path)
+        else:
+            self.template_path = None
+            self.template_content, self.input_positions, self.output_position = self.parse_json_str(template_json_string)
         if len(self.input_positions) == 2:
             self.sentence_pair = True
         elif len(self.input_positions) == 1:
@@ -34,6 +36,10 @@ class SentenceTemplate():
         input_positions = []
         output_position = -1
         self.template_name = template_info['name']
+        self.reverse_order = False
+        if 'reverse_order' in template_info:
+            self.reverse_order = template_info['reverse_order']
+            print(f"reverse the order of sentence pairs: {self.reverse_order}")
 
         for i, desc_dict in enumerate(template_info['template']):
             meta = desc_dict['meta']
@@ -50,6 +56,30 @@ class SentenceTemplate():
                 raise NotImplementedError
         return template_content, input_positions, output_position
     
+    def parse_json_str(self, json_str):
+        assert not self.read_from_raw_file
+        template_info = json.loads(json_str)
+        template_content = []
+        input_positions = []
+        output_position = -1
+        self.template_name = template_info['name']
+        self.reverse_order = False
+
+        for i, desc_dict in enumerate(template_info['template']):
+            meta = desc_dict['meta']
+            if 'text' in meta:
+                input_positions.append(i)
+                template_content.append("{" + meta + "}")
+            elif "output_token" in meta:
+                output_position = i
+                template_content.append("[P]")
+            elif "prompt_segment" in meta:
+                segment = desc_dict['content']
+                template_content.append(segment)
+            else:
+                raise NotImplementedError
+        return template_content, input_positions, output_position
+
     def visualize(self):
         print("template: ", ''.join(self.template_content))
         return ''.join(self.template_content)
@@ -136,8 +166,10 @@ class SentenceTemplate():
                     prompt_after_textb = None
             else:
                 prompt_after_textb = None
-
-            text_a, text_b = self.format_sp_input(text_a, text_b, prompt_before_texta, self.template_content[self.input_positions[0] + 1], self.template_content[self.input_positions[1] - 1], prompt_after_textb)
+            if self.reverse_order:
+                text_a, text_b = self.format_sp_input(text_b, text_a, prompt_before_texta, self.template_content[self.input_positions[0] + 1], self.template_content[self.input_positions[1] - 1], prompt_after_textb)            
+            else:
+                text_a, text_b = self.format_sp_input(text_a, text_b, prompt_before_texta, self.template_content[self.input_positions[0] + 1], self.template_content[self.input_positions[1] - 1], prompt_after_textb)
         else:
             if self.input_positions[0] < len(self.template_content) - 1:
                 text_a = self.format_input(text_a, self.template_content[self.input_positions[0] + 1])
@@ -177,7 +209,8 @@ class SentenceTemplate():
 
 class RandomSentenceTemplate():
     def __init__(self, output_token = '[MASK]', tokenizer: PreTrainedTokenizer = None, prompt_loc = 'end', candidate_length = [10, 20, 50, 100,],
-                        rand_prompt_length = False, rand_mask_loc = False, prompt_length = 10, mask_loc = 0,):
+                        rand_prompt_length = False, rand_mask_loc = False, prompt_length = 10, mask_loc = 0,
+                        sentence_pair = False):
         '''
         prompt_loc:  begin/end
         This is not used in PromptBoosting. Instead, it is the initial explorations of this project, where we try to use random prompts 
@@ -195,6 +228,7 @@ class RandomSentenceTemplate():
         self.rand_mask_loc = rand_mask_loc
         self.prompt_length = prompt_length
         self.mask_loc = mask_loc
+        self.sentence_pair = sentence_pair
 
         self.template_content, self.input_positions, self.output_position = self.generate_template()
         self.output_token = output_token
@@ -259,6 +293,10 @@ class RandomSentenceTemplate():
             template_content.append("text_a")
             input_position.append(curr_loc)
             curr_loc += 1
+        if self.sentence_pair:
+            template_content.append("text_b")
+            input_position.append(curr_loc)
+            curr_loc += 1
         print("template: ", ' '.join(template_content))
         print("input position", input_position)
         print("output position: ", output_position)
@@ -279,8 +317,9 @@ class RandomSentenceTemplate():
             return self.transform_input(input_sentence)
 
 class TemplateSaver():
-    def __init__(self, template_path = ROOT_DIR + 'template/sst/'):
+    def __init__(self, template_path, template_suffix = ''):
         self.template_path = template_path
+        self.template_suffix = template_suffix
         if not os.path.exists(self.template_path):
             os.makedirs(self.template_path)
         self.count_template()
@@ -293,7 +332,7 @@ class TemplateSaver():
 
     def save(self, template:SentenceTemplate):
         self.count_template()
-        template_name = f"rand_rte_init1_len100_{self.num_templates + 1}"
+        template_name = f"{self.template_suffix}_{self.num_templates + 1}"
         json_list = []
         segment_id = 1
         for i, content in enumerate(template.template_content):
@@ -306,25 +345,37 @@ class TemplateSaver():
                 segment_id += 1
             json_list.append(desc_dict)
         json_dict = {"name": template_name,"template": json_list}
-        with open(self.template_path + f'{template_name}.json', 'w', encoding = 'utf-8') as f:
+        with open(os.path.join(self.template_path, f'{template_name}.json'), 'w', encoding = 'utf-8') as f:
             json.dump(json_dict, f, indent = 4)
 
     def save_template(self, template: Union[SentenceTemplate, RandomSentenceTemplate]):
         self.save(template)
 
 class TemplateManager():
-    def __init__(self, template_dir_list = [ROOT_DIR + 'templates/sst/'], output_token = '<mask>', max_template_num = 0, 
-                 use_part_templates = False, start_idx = 0, end_idx = 10, rand_order = True):
+    def __init__(self, template_dir_list, output_token = '<mask>', max_template_num = 0, 
+                 use_part_templates = False, start_idx = 0, end_idx = 10, rand_order = True,
+                 single_template_file = False, filtered_template_ids = None,
+                 ):
         self.template_dir_list = template_dir_list
         self.output_token = output_token
         self.max_template_num = max_template_num
         self.rand_order = rand_order
-        self.template_list = self.load_templates()
+        self.single_template_file = single_template_file
+        self.filtered_template_ids = filtered_template_ids
+
+        if self.single_template_file:
+            self.template_list = self.load_single_template_file()
+        else:
+            self.template_list = self.load_templates()
         print(f"{len(self.template_list)} templates loaded...")
 
         self.use_part_templates = use_part_templates
         self.start_idx = start_idx
         self.end_idx = end_idx
+
+        if self.filtered_template_ids != None:
+            self.template_list = [self.template_list[x] for x in self.filtered_template_ids]
+            self.end_idx = len(self.template_list)
 
         if not self.use_part_templates:
             if self.rand_order:
@@ -368,12 +419,31 @@ class TemplateManager():
                 template = SentenceTemplate(template_path = file_addr, output_token = self.output_token)
                 template_list.append(template)
         if self.max_template_num > 0:
+            template_list = template_list[:self.max_template_num]
+        return template_list
+
+    def load_single_template_file(self, ) -> List[SentenceTemplate]:
+        '''
+        all templates are contained in one file instead of each template in one file
+        '''
+        assert self.single_template_file
+        assert type(self.template_dir_list) == str
+        with open(self.template_dir_list, 'r', encoding = 'utf-8') as f:
+            raw_templates = json.load(f)
+        template_list = []
+        for raw_template in raw_templates:
+            json_str_template = json.dumps(raw_template)
+            template = SentenceTemplate(template_json_string = json_str_template, output_token = self.output_token, read_from_raw_file = False)
+            template_list.append(template)
+        if self.max_template_num > 0:
             if self.rand_order:
                 rand_template_idxs = np.random.choice(len(template_list), self.max_template_num)
                 template_list = [template_list[x] for x in rand_template_idxs]
             else:
                 template_list = template_list[:self.max_template_num]
         return template_list
+
+        
 
     def change_rand_indices(self):
         if self.use_part_templates:

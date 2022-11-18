@@ -4,6 +4,7 @@ import torch
 import tqdm
 import time
 import copy
+import os
 
 from src.multicls_trainer import PromptBoostingTrainer
 from src.ptuning import  RoBERTaVTuningClassification, OPTVTuningClassification
@@ -81,21 +82,17 @@ if __name__ == '__main__':
     weight_tensor = torch.ones(num_training, dtype = torch.float32).to(device) / num_training
 
     if model == 'roberta':
-        vtuning_model = RoBERTaVTuningClassification(model_type = 'roberta-large', cache_dir = MODEL_CACHE_DIR + 'roberta_model/roberta-large/',
+        vtuning_model = RoBERTaVTuningClassification(model_type = 'roberta-large', cache_dir = os.path.join(MODEL_CACHE_DIR, 'roberta_model/roberta-large/'),
                                                 device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
     elif model == 'opt-13b':
-        vtuning_model = OPTVTuningClassification(model_type = 'facebook/opt-13b', cache_dir = MODEL_CACHE_DIR + 'opt_model/opt-1.3b/',
+        vtuning_model = OPTVTuningClassification(model_type = 'facebook/opt-13b', cache_dir = os.path.join(MODEL_CACHE_DIR, 'opt_model/opt-1.3b/'),
                                                 device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
-    elif model == 'opt-6.7b':
-        vtuning_model = OPTVTuningClassification(model_type = 'facebook/opt-6.7b', cache_dir = MODEL_CACHE_DIR + 'opt_model/opt-6.7b/',
-                                                device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
-
     else:
         raise NotImplementedError
     if args.template_dir == '':
         template_dir_list = get_template_list(dataset, model = model)
     else:
-        template_dir_list = [ROOT_DIR + args.template_dir]
+        template_dir_list = [os.path.join(ROOT_DIR, args.template_dir)]
     template_manager = TemplateManager(template_dir_list = template_dir_list, output_token = vtuning_model.tokenizer.mask_token,
                                       rand_order = False)
 

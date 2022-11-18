@@ -3,6 +3,7 @@ import torch
 
 import tqdm
 import time
+import os
 
 from src.multicls_trainer import PromptBoostingTrainer
 from src.ptuning import BaseModel, OPTVTuningClassification, RoBERTaVTuningClassification
@@ -94,10 +95,10 @@ if __name__ == '__main__':
     weight_tensor = torch.ones(num_training, dtype = torch.float32).to(device) / num_training
 
     if model == 'roberta':
-        vtuning_model = RoBERTaVTuningClassification(model_type = 'roberta-large', cache_dir = MODEL_CACHE_DIR + 'roberta_model/roberta-large/',
+        vtuning_model = RoBERTaVTuningClassification(model_type = 'roberta-large', cache_dir = os.path.join(MODEL_CACHE_DIR, 'roberta_model/roberta-large/'),
                                                 device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
     elif model == 'opt1.3b':
-        vtuning_model = OPTVTuningClassification(model_type = 'facebook/opt-1.3b', cache_dir = MODEL_CACHE_DIR + 'opt_model/opt-1.3b/',
+        vtuning_model = OPTVTuningClassification(model_type = 'facebook/opt-1.3b', cache_dir = os.path.join(MODEL_CACHE_DIR, 'opt_model/opt-1.3b/'),
                                                 device = device, verbalizer_dict = None, sentence_pair = sentence_pair)
 
     template_dir_list = get_template_list(dataset)
@@ -110,14 +111,14 @@ if __name__ == '__main__':
     trainer = PromptBoostingTrainer(adaboost_lr = adaboost_lr, num_classes = num_classes, adaboost_maximum_epoch = adaboost_maximum_epoch)
 
     if pred_cache_dir != '':
-        prediction_saver = PredictionSaver(save_dir = ROOT_DIR + pred_cache_dir + '/novalid/', model_name = model,
+        prediction_saver = PredictionSaver(save_dir = os.path.join(ROOT_DIR, pred_cache_dir, 'novalid/'), model_name = model,
                                             fewshot = fewshot, fewshot_k = fewshot_k, fewshot_seed = fewshot_seed,
                                             )
     else:
         prediction_saver = PredictionSaver(model_name = model,
                                             fewshot = fewshot, fewshot_k = fewshot_k, fewshot_seed = fewshot_seed,        
                                             )
-    test_pred_saver = TestPredictionSaver(save_dir = ROOT_DIR + f'/cached_test_preds/{dataset}/', model_name = model)
+    test_pred_saver = TestPredictionSaver(save_dir = os.path(ROOT_DIR, f'cached_test_preds/{dataset}/'), model_name = model)
     train_probs, valid_probs = [],[]
 
     word2idx = vtuning_model.tokenizer.get_vocab()

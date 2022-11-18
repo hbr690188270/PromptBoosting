@@ -17,12 +17,12 @@ def load_dataset(dataset_name = 'sst', sort_dataset = False, fewshot = False, k 
         assert k > 0, f"k must > 0, found {k}"
         if k > 16:
             assert sort_dataset, "sort the dataset before training for acceleration."
-        dataset_path = ROOT_DIR + f'datasets/k-shot/{dataset_transform[dataset_name]}/{k}-{rand_seed}/'
+        dataset_path = os.path.join(ROOT_DIR, f'datasets/k-shot/{dataset_transform[dataset_name]}/{k}-{rand_seed}/')
     elif low_resource:
         assert not use_valid_for_train, "cannot use valid for training in low resource setting!"
-        dataset_path = ROOT_DIR + f'datasets/low-resource-16valid/{dataset_transform[dataset_name]}/{k}-{rand_seed}/'
+        dataset_path = os.path.join(ROOT_DIR, f'datasets/low-resource-16valid/{dataset_transform[dataset_name]}/{k}-{rand_seed}/')
     else:
-        dataset_path = ROOT_DIR + f'datasets/full_dataset/{dataset_transform[dataset_name]}/'
+        dataset_path = os.path.join(ROOT_DIR, f'datasets/full_dataset/{dataset_transform[dataset_name]}/')
     if dataset_name in ['snli','mnli','qnli']:
         assert (fewshot or low_resource), "NLI dataset (except RTE) does not support full-data training!"
     if dataset_name == 'sst':
@@ -37,8 +37,6 @@ def load_dataset(dataset_name = 'sst', sort_dataset = False, fewshot = False, k 
         train_dataset, valid_dataset, test_dataset = load_dataset_qnli(dataset_path, sort_dataset = sort_dataset)
     elif dataset_name == 'snli':
         train_dataset, valid_dataset, test_dataset = load_dataset_snli(dataset_path, sort_dataset = sort_dataset)
-    elif dataset_name == 'imdb':
-        train_dataset, valid_dataset, test_dataset = load_dataset_imdb(dataset_path, sort_dataset = sort_dataset)
     elif dataset_name == 'trec':
         train_dataset, valid_dataset, test_dataset = load_dataset_trec(dataset_path, sort_dataset = sort_dataset)
     elif dataset_name == 'agnews':
@@ -68,7 +66,7 @@ def load_dataset_sst(path = 'sst-2/', sort_dataset = False):
     def process_file(file):    
         sentence_list = []
         label_list = []
-        with open(path + file,'r',encoding = 'utf-8') as f:
+        with open(os.path.join(path,file),'r',encoding = 'utf-8') as f:
             next(f)
             for line in f:
                 sen, label = line.split("\t",1)
@@ -82,9 +80,9 @@ def load_dataset_sst(path = 'sst-2/', sort_dataset = False):
     return train_dataset, valid_dataset, test_dataset
 
 def load_dataset_sst5(path = 'original/sst-5/', sort_dataset = False):
-    train_df = pd.read_csv(path + 'train.csv', names = ['label','sentence'])
-    valid_df = pd.read_csv(path + 'dev.csv', names = ['label','sentence'])
-    test_df = pd.read_csv(path + 'test.csv', names = ['label','sentence'])
+    train_df = pd.read_csv(os.path.join(path, 'train.csv'), names = ['label','sentence'])
+    valid_df = pd.read_csv(os.path.join(path, 'dev.csv'), names = ['label','sentence'])
+    test_df = pd.read_csv(os.path.join(path, 'test.csv'), names = ['label','sentence'])
     train_xs = train_df['sentence'].tolist()
     train_ys = [int(x) for x in train_df['label'].tolist()]
     valid_xs = valid_df['sentence'].tolist()
@@ -102,7 +100,7 @@ def load_dataset_rte(path, sort_dataset = False):
     def process_file(file):    
         sentence_list = []
         label_list = []
-        with open(path + file,'r',encoding = 'utf-8') as f:
+        with open(os.path.join(path, file),'r',encoding = 'utf-8') as f:
             next(f)
             for line in f:
                 idx, sen1, sen2, label = line.strip().split("\t",3)
@@ -119,7 +117,7 @@ def load_dataset_mnli(path, sort_dataset = False):
     def process_file(file):    
         sentence_list = []
         label_list = []
-        with open(path + file,'r',encoding = 'utf-8') as f:
+        with open(os.path.join(path, file),'r',encoding = 'utf-8') as f:
             next(f)
             for line in f:
                 items = line.strip().split("\t")
@@ -140,7 +138,7 @@ def load_dataset_qnli(path = 'qnli/', sort_dataset = False):
         count = 0
         sentence_list = []
         label_list = []
-        with open(path + file,'r',encoding = 'utf-8') as f:
+        with open(os.path.join(path, file),'r',encoding = 'utf-8') as f:
             next(f)
             for line in f:
                 count += 1
@@ -154,9 +152,9 @@ def load_dataset_qnli(path = 'qnli/', sort_dataset = False):
     return train_dataset, valid_dataset, test_dataset
 
 def load_dataset_trec(path, sort_dataset = False):
-    train_df = pd.read_csv(path + 'train.csv', names = ['label','sentence'])
-    valid_df = pd.read_csv(path + 'dev.csv', names = ['label','sentence'])
-    test_df = pd.read_csv(path + 'test.csv', names = ['label','sentence'])
+    train_df = pd.read_csv(os.path.join(path, 'train.csv'), names = ['label','sentence'])
+    valid_df = pd.read_csv(os.path.join(path, 'dev.csv'), names = ['label','sentence'])
+    test_df = pd.read_csv(os.path.join(path, 'test.csv'), names = ['label','sentence'])
     train_xs = train_df['sentence'].tolist()
     train_ys = [int(x) for x in train_df['label'].tolist()]
     valid_xs = valid_df['sentence'].tolist()
@@ -174,7 +172,7 @@ def load_dataset_snli(path, sort_dataset = False):
     def process_file(file):    
         sentence_list = []
         label_list = []
-        with open(path + file,'r',encoding = 'utf-8') as f:
+        with open(os.path.join(path, file),'r',encoding = 'utf-8') as f:
             next(f)
             for line in f:
                 item_list = line.strip().split("\t")
@@ -189,37 +187,10 @@ def load_dataset_snli(path, sort_dataset = False):
     test_dataset = process_file("test.tsv")
     return train_dataset, valid_dataset, test_dataset
 
-def load_dataset_imdb(path, sort_dataset = False):
-    train_df = pd.read_csv(path + 'train.csv', names = ['idx', 'sentence', 'label'])
-    valid_df = pd.read_csv(path + 'dev.csv', names = ['idx', 'sentence', 'label'])
-    test_df = pd.read_csv(path + 'test.csv', names = ['idx', 'sentence', 'label'])
-    train_xs = train_df['sentence'].tolist()
-    train_ys = [int(x) for x in train_df['label'].tolist()]
-    valid_xs = valid_df['sentence'].tolist()
-    valid_ys = [int(x) for x in valid_df['label'].tolist()]
-    test_xs = test_df['sentence'].tolist()
-    test_ys = [int(x) for x in test_df['label'].tolist()]
-
-    # train_xs = preprocess_imdb(train_xs)
-    # valid_xs = preprocess_imdb(valid_xs)
-    # test_xs = preprocess_imdb(test_xs)
-    train_dataset = (train_xs, train_ys)
-    valid_dataset = (valid_xs, valid_ys)
-    test_dataset = (test_xs, test_ys)
-    return train_dataset, valid_dataset, test_dataset
-
-def preprocess_imdb(orig_texts: List[str]):
-    filtered_texts = []
-    for text in orig_texts:
-        filtered_text = text.replace("<br />", "")
-        # filtered_text = filtered_text.replace(r"\'","'")
-        filtered_texts.append(filtered_text)
-    return filtered_texts
-
 def load_dataset_agnews(path, sort_dataset = False):
-    train_df = pd.read_csv(path + 'train.csv', names = ['index', 'sentence', 'label'])
-    valid_df = pd.read_csv(path + 'dev.csv', names = ['index', 'sentence', 'label'])
-    test_df = pd.read_csv(path + 'test.csv', names = ['index', 'sentence', 'label'])
+    train_df = pd.read_csv(os.path.join(path, 'train.csv'), names = ['index', 'sentence', 'label'])
+    valid_df = pd.read_csv(os.path.join(path, 'dev.csv'), names = ['index', 'sentence', 'label'])
+    test_df = pd.read_csv(os.path.join(path, 'test.csv'), names = ['index', 'sentence', 'label'])
     train_xs = train_df['sentence'].tolist()
     train_ys = [int(x) for x in train_df['label'].tolist()]
     valid_xs = valid_df['sentence'].tolist()
@@ -233,9 +204,25 @@ def load_dataset_agnews(path, sort_dataset = False):
     return train_dataset, valid_dataset, test_dataset
 
 def load_dataset_mr(path, sort_dataset = False):
-    train_df = pd.read_csv(path + 'train.csv', names = ['label','sentence'])
-    valid_df = pd.read_csv(path + 'dev.csv', names = ['label','sentence'])
-    test_df = pd.read_csv(path + 'test.csv', names = ['label','sentence'])
+    train_df = pd.read_csv(os.path.join(path, 'train.csv'), names = ['label','sentence'])
+    valid_df = pd.read_csv(os.path.join(path, 'dev.csv'), names = ['label','sentence'])
+    test_df = pd.read_csv(os.path.join(path, 'test.csv'), names = ['label','sentence'])
+    train_xs = train_df['sentence'].tolist()
+    train_ys = [int(x) for x in train_df['label'].tolist()]
+    valid_xs = valid_df['sentence'].tolist()
+    valid_ys = [int(x) for x in valid_df['label'].tolist()]
+    test_xs = test_df['sentence'].tolist()
+    test_ys = [int(x) for x in test_df['label'].tolist()]
+
+    train_dataset = (train_xs, train_ys)
+    valid_dataset = (valid_xs, valid_ys)
+    test_dataset = (test_xs, test_ys)
+    return train_dataset, valid_dataset, test_dataset
+
+def load_dataset_cr(path, sort_dataset = False):
+    train_df = pd.read_csv(os.path.join(path, 'train.csv'), names = ['label','sentence'])
+    valid_df = pd.read_csv(os.path.join(path, 'dev.csv'), names = ['label','sentence'])
+    test_df = pd.read_csv(os.path.join(path, 'test.csv'), names = ['label','sentence'])
     train_xs = train_df['sentence'].tolist()
     train_ys = [int(x) for x in train_df['label'].tolist()]
     valid_xs = valid_df['sentence'].tolist()
@@ -312,21 +299,23 @@ def get_weak_cls_num(dataset_name):
 def get_template_list(dataset, model = 'roberta'):
     if model in ['roberta']:
         if dataset == 'sst':
-            template_dir_list = [ROOT_DIR + 'templates/t5_sorted_sst/']
+            template_dir_list = [os.path.join(ROOT_DIR, 'templates/t5_sorted_sst/')]
+        elif dataset == 'sst-5':
+            template_dir_list = [os.path.join(ROOT_DIR, 'templates/t5_sorted_sst-5/')]
         elif dataset == 'rte':
-            template_dir_list = [ROOT_DIR + 'templates/t5_sorted_rte/']
+            template_dir_list = [os.path.join(ROOT_DIR, 'templates/t5_sorted_rte/')]
         elif dataset == 'mnli':
-            template_dir_list = [ROOT_DIR + 'templates/t5_sorted_mnli/']
+            template_dir_list = [os.path.join(ROOT_DIR, 'templates/t5_sorted_mnli/')]
         elif dataset == 'qnli':
-            template_dir_list = [ROOT_DIR + 'templates/t5_sorted_qnli/']
+            template_dir_list = [os.path.join(ROOT_DIR, 'templates/t5_sorted_qnli/')]
         elif dataset == 'snli':
-            template_dir_list = [ROOT_DIR + 'templates/t5_sorted_snli/']
+            template_dir_list = [os.path.join(ROOT_DIR, 'templates/t5_sorted_snli/')]
         elif dataset == 'trec':
-            template_dir_list = [ROOT_DIR + 'templates/t5_sorted_trec/']
+            template_dir_list = [os.path.join(ROOT_DIR, 'templates/t5_sorted_trec/')]
         elif dataset == 'agnews':
-            template_dir_list = [ROOT_DIR + 'templates/t5_sorted_agnews/']
+            template_dir_list = [os.path.join(ROOT_DIR, 'templates/t5_sorted_agnews/')]
         elif dataset == 'mr':
-            template_dir_list = [ROOT_DIR + 'templates/t5_sorted_mr/']
+            template_dir_list = [os.path.join(ROOT_DIR, 'templates/t5_sorted_mr/')]
         else:
             raise NotImplementedError
     else:
@@ -337,25 +326,21 @@ def get_template_list(dataset, model = 'roberta'):
 
 def get_full_template_list(dataset, ):
     if dataset == 'sst':
-        template_dir_list = [ROOT_DIR + 'templates/full_templates/t5_sorted_sst/']
-    elif dataset == 'sst5':
-        template_dir_list = [ROOT_DIR + 'templates/full_templates/t5_sorted_sst5/']
+        template_dir_list = [os.path.join(ROOT_DIR, 'templates/full_templates/t5_sorted_sst/')]
     elif dataset == 'rte':
-        template_dir_list = [ROOT_DIR + 'templates/full_templates/t5_sorted_rte/']
+        template_dir_list = [os.path.join(ROOT_DIR, 'templates/full_templates/t5_sorted_rte/')]
     elif dataset == 'mnli':
-        template_dir_list = [ROOT_DIR + 'templates/full_templates/t5_sorted_mnli/']
+        template_dir_list = [os.path.join(ROOT_DIR, 'templates/full_templates/t5_sorted_mnli/')]
     elif dataset == 'qnli':
-        template_dir_list = [ROOT_DIR + 'templates/full_templates/t5_sorted_qnli/']
+        template_dir_list = [os.path.join(ROOT_DIR, 'templates/full_templates/t5_sorted_qnli/')]
     elif dataset == 'snli':
-        template_dir_list = [ROOT_DIR + 'templates/full_templates/t5_sorted_snli/']
-    elif dataset == 'imdb':
-        template_dir_list = [ROOT_DIR + 'templates/full_templates/t5_sorted_imdb/']
+        template_dir_list = [os.path.join(ROOT_DIR, 'templates/full_templates/t5_sorted_snli/')]
     elif dataset == 'trec':
-        template_dir_list = [ROOT_DIR + 'templates/full_templates/t5_sorted_trec/']
+        template_dir_list = [os.path.join(ROOT_DIR, 'templates/full_templates/t5_sorted_trec/')]
     elif dataset == 'agnews':
-        template_dir_list = [ROOT_DIR + 'templates/full_templates/t5_sorted_agnews/']
+        template_dir_list = [os.path.join(ROOT_DIR, 'templates/full_templates/t5_sorted_agnews/')]
     elif dataset == 'mr':
-        template_dir_list = [ROOT_DIR + 'templates/full_templates/t5_sorted_mr/']
+        template_dir_list = [os.path.join(ROOT_DIR, 'templates/full_templates/t5_sorted_mr/')]
     else:
         raise NotImplementedError
     return template_dir_list
@@ -364,9 +349,9 @@ def get_template_list_with_filter(dataset, fewshot = False, low = False, fewshot
                                   return_source_dir = False):
     assert (fewshot or low)
     if fewshot:
-        stat_file_path = ROOT_DIR + f'stat_data_file/{dataset}/roberta-{dataset}-{fewshot_k}shot-seed{fewshot_seed}.csv'
+        stat_file_path = os.path.join(ROOT_DIR, f'stat_data_file/{dataset}/roberta-{dataset}-{fewshot_k}shot-seed{fewshot_seed}.csv')
     else:
-        stat_file_path = ROOT_DIR + f'stat_data_file/{dataset}/roberta-{dataset}-low{fewshot_k}-seed{fewshot_seed}.csv'
+        stat_file_path = os.path.join(ROOT_DIR, f'stat_data_file/{dataset}/roberta-{dataset}-low{fewshot_k}-seed{fewshot_seed}.csv')
 
     stat_df = pd.read_csv(stat_file_path)
     valid_acc = stat_df['valid_acc'].to_numpy()
@@ -379,9 +364,9 @@ def get_template_list_with_filter(dataset, fewshot = False, low = False, fewshot
         print(topk_templates[i], topk_valid_accs[i])
     
     if fewshot:
-        filtered_template_save_dir = ROOT_DIR + f'templates/filtered-templates/{dataset}/{fewshot_k}shot-seed{fewshot_seed}'
+        filtered_template_save_dir = os.path.join(ROOT_DIR, f'templates/filtered-templates/{dataset}/{fewshot_k}shot-seed{fewshot_seed}')
     else:
-        filtered_template_save_dir = ROOT_DIR + f'templates/filtered-templates/{dataset}/low{fewshot_k}-seed{fewshot_seed}'
+        filtered_template_save_dir = os.path.join(ROOT_DIR, f'templates/filtered-templates/{dataset}/low{fewshot_k}-seed{fewshot_seed}')
 
     if os.path.exists(filtered_template_save_dir):
         if return_source_dir:

@@ -75,12 +75,12 @@ if __name__ == '__main__':
         # training_args.report_to = []
 
     if model_type == 'roberta':
-        cache_dir = MODEL_CACHE_DIR + 'roberta_model/roberta-large/'
+        cache_dir = os.path.join(MODEL_CACHE_DIR, 'roberta_model/roberta-large/')
         tokenizer = RobertaTokenizer.from_pretrained('roberta-large', cache_dir = cache_dir)
         model = RobertaForSequenceClassification.from_pretrained('roberta-large', cache_dir = cache_dir, num_labels = num_labels)
         model_fn = RobertaForSequenceClassification
     elif model_type == 'bert':
-        cache_dir = MODEL_CACHE_DIR + 'bert_model/bert-large-uncased/'
+        cache_dir = os.path.join(MODEL_CACHE_DIR, 'bert_model/bert-large-uncased/')
         model = BertForSequenceClassification.from_pretrained('bert-large-uncased', cache_dir = cache_dir, num_labels = num_labels)
         tokenizer = BertTokenizer.from_pretrained('bert-large-uncased', cache_dir = cache_dir)
         model_fn = BertForSequenceClassification
@@ -166,7 +166,11 @@ if __name__ == '__main__':
     data_dict = {'test_acc': eval_results['eval_acc'], 'wandb_id': wandb_id, 'fewshot_seed': fewshot_seed, 'fewshot_k': fewshot_k}
     required_keys = ['wandb_id', 'fewshot_k', 'fewshot_seed','test_acc']
     filename = f'finetuning-{model_type}-{dataset}.csv'
-    file_addr = ROOT_DIR + 'stat_data_file/' + filename
+
+    file_dir = os.path.join(ROOT_DIR, 'stat_data_file')
+    if not os.path.exists(file_dir):
+        os.makedirs(file_dir)
+    file_addr = os.path.join(file_dir, filename)
     write_performance(file_addr, data_dict, required_keys)
 
 
