@@ -20,10 +20,11 @@ Or you can directly download it from [here](https://drive.google.com/file/d/1GKz
 ```
 prompt_boosting/
     datasets/
-        ag_news/
-        MNLI/
-        mr/
-        ...
+        original/
+            agnews/
+            MNLI/
+            mr/
+            ...
     scripts/
     src/
     templates/
@@ -32,11 +33,13 @@ prompt_boosting/
 #### 1. Generating few-shot splits
 To generate the few-shot data, use the following command:
 ```{sh}
-python scripts/generate_k_shot_data.py --data_dir datasets/original --output_dir datasets
+python scripts/generate_k_shot_data.py --data_dir datasets/original --output_dir datasets --task {dataset_name}
 ```
+Current supported datasets for `--task`: SST-2/mr/trec/MNLI.SNLI/QNLI/RTE/agnews
+
 To generate the training data larger than 16-shot per class, use the following command:
 ```{sh}
-python scripts/generate_low_resource_data.py
+python scripts/generate_low_resource_data.py --data_dir datasets/original --output_dir datasets --task {dataset_name}
 ```
 
 Since the AG's News dataset is not in the repository of LM-BFF, you need to download it by running the following command before generating few-shot splits:
@@ -60,15 +63,17 @@ python scripts/transform_sst_test.py
 ## Running the experiments
 The implementation of PromptBoosting is in the folder `./src`. 
 
-### 1. Preprocessing
+### 1. Preprocessing (optional)
 Pre-compute the test set prediction using the command:
 ```sh
 python scripts/pre_compute_testset.py --dataset sst --model roberta --use_part_template --start_idx 0 --end_idx 10 --sort_dataset --fewshot --fewshot_k 16 --fewshot_seed 13 
 ```
+`dataset`: choices include `sst, mr, agnews, trec, snli, mnli, qnli, rte`.
+
 ### 2. Main experiments
 To run the codes, use the following command:
 ```{sh}
-python ensemble_training.py --adaboost_weak_cls 200 --dataset trec --model roberta --label_set_size 5 --change_template --use_part_templates --start_idx 0 --end_idx 10 --sort_dataset --fewshot --fewshot_k 16 --fewshot_seed 100
+python ensemble_training.py --adaboost_weak_cls 200 --dataset trec --model roberta --label_set_size 3 --change_template --use_part_templates --start_idx 0 --end_idx 10 --sort_dataset --fewshot --fewshot_k 16 --fewshot_seed 13
 ```
 Explanations on the parameters:
 
@@ -80,17 +85,19 @@ Explanations on the parameters:
 
 `change_template`: whether randomly change the prompt for each weak classifier training. If we use the same prompt for all weak classifiers, then the performance will be very weak. See Table 3 in the paper.
 
-`use_part_templates`: whether use only part of templates instead of all 100 templates we generated.
+`use_part_templates`: whether use only part of templates instead of all templates.
 
-`start_idx, end_idx`: controls the templates we use ([start_idx, end_idx)
+`start_idx, end_idx`: controls the templates we use ([start_idx, end_idx). In the paper we use templates 1-10
 
 `sort_dataset`: sort the dataset according to the length of the input. This is for acceleration in batch (examples with similar length will be grouped into the same batch and decrease the padding operations.) However, for the few-shot setting, this is not necessary.
 
 `fewshot`: whether use few-shot setting or full data training
 
-`fewshot_k`: by default you should set it to16.
+`fewshot_k`: by default you should set it to 16.
 
 `fewshot_seed`: random seed for generating few-shot splits. choices include [12, 21, 42, 87, 100]
+
+`use_wandb`: you can use WANDB to log the training process by using `--use_wandb`
 
 **Note**: as we have discussed in the experiments (if running experiments using the above commands you can also find the phenomenon), we cannot use Adaboost to ensemble models on SST and MR datasets. Individual weak classifiers can achieve 100% accuracy because the training data is small and easy for the model to fit. Therefore, in 16-shot few-shot setting, we do not ensemble classifiers on SST and MR datasets. Instead, we directly learn weak learners on the unweighted training set and use the weak learner with the best validation performance as the final model (instead of the ensembled model). To run experiments on SST and MR datasets in the 16-shot setting, use the following command:
 
@@ -110,14 +117,20 @@ The key difference is we change `--fewshot` to `--low` to represent the setting 
 ### Refinement of Prompts
 To reproduce the prompt refinement experiments in Figure 2 in the paper, we need to first evaluate the prompts based on the unweighted training set. Use the following command:
 ```sh
-python scripts/template_refinement.py --dataset sst --model roberta --label_set_size 50 --{fewshot/low} --fewshot_k {16,32,64,128,256} --fewshot_seed {13,21,42,87,100}
+python scripts/template_refinement.py --dataset snli --model roberta --label_set_size 10 --{fewshot/low} --fewshot_k {16,32,64,128,256} --fewshot_seed {13,21,42,87,100}
 ```
 Similarly, if you want to run the experiments in Figure 2 (`k=32 or more`), please use `--low` instead of  `--fewshot`.
+
+After that, use the following command to evaluate the performance:
+
+```sh
+python ensemble_training.py --adaboost_weak_cls 200 --dataset snli --model roberta --label_set_size 10 --filter_templates --change_template --use_part_templates --sort_dataset --{fewshot/low} --fewshot_k {16,32,64,128,256} --fewshot_seed {13,21,42,87,100}
+```
 
 ### Generating Prompts with LM-BFF
 We employ the method of LM-BFF to generate prompts with the T5 model. One can refer to the repository of LM-BFF for detailed explanations. To run the generation code, use the following command:
 ```{sh}
-python scripts/generate_templates.py --t5_model t5-3b --seed {13,21,42,87,100} --task_name {SST-2,mr, ag_news, trec, MNLI, SNLI, QNLI, RTE} --output_dir templates --data_dir datasets/k-shot/ --beam 100 --k 16
+python scripts/generate_templates.py --t5_model t5-large --seed {13,21,42,87,100} --task_name {SST-2,mr, ag_news, trec, MNLI, SNLI, QNLI, RTE} --output_dir templates --data_dir datasets/k-shot/ --beam 100 --k 16
 ```
 This scripts will generate prompts based on the few-shot training data (`--seed` indicates which few-shot split you will use). By default it will generate 5 groups of prompts for the 5 different splits. For save of time, we only generate prompts based on 1 split and use that group of prompts for all the other splits of dataset for model training.
 
@@ -135,3 +148,11 @@ Some of our implementation comes from LM-BFF:
 }
 ```
 
+### Citation
+```tex
+@article{hou2022promptboosting,
+  title={PromptBoosting: Black-Box Text Classification with Ten Forward Passes},
+  author={Hou, Bairu and O'Connor, Joe and Andreas, Jacob and Chang, Shiyu and Zhang, Yang},
+  journal={arXiv preprint arXiv:2212.09257},
+  year={2022}
+}```
