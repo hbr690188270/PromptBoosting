@@ -12,7 +12,7 @@ In this work we propose PromptBoosting, a query-efficient procedure for building
 
 
 ## Requirements
-The dependency packages can be found in `requirements.txt` file.
+The dependency packages can be found in `requirements.txt` file. One can use `pip install -r requirements.txt` to configure the environment. We use python 3.8 to run the experiments.
 
 ## Prepare the Data
 Similar to our baselines (DART, BBT, RLPrompt), we use the same few-shot split data from [LM-BFF](https://arxiv.org/pdf/2012.15723.pdf). One can directly download the data from the official github repository of LM-BFF([here](https://github.com/princeton-nlp/LM-BFF)).
