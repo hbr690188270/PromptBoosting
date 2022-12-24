@@ -117,7 +117,7 @@ The key difference is we change `--fewshot` to `--low` to represent the setting 
 ### Refinement of Prompts
 To reproduce the prompt refinement experiments in Figure 2 in the paper, we need to first evaluate the prompts based on the unweighted training set. Use the following command:
 ```sh
-python scripts/template_refinement.py --dataset snli --model roberta --label_set_size 10 --{fewshot/low} --fewshot_k {16,32,64,128,256} --fewshot_seed {13,21,42,87,100}
+python scripts/template_refinement.py --dataset snli --sort_dataset --model roberta --label_set_size 10 --{fewshot/low} --fewshot_k {16,32,64,128,256} --fewshot_seed {13,21,42,87,100}
 ```
 Similarly, if you want to run the experiments in Figure 2 (`k=32 or more`), please use `--low` instead of  `--fewshot`.
 
